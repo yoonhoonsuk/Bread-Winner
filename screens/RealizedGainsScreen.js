@@ -1,26 +1,28 @@
 import React, { useState } from "react";
-import { Button, FlatList, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, FlatList, View, Text, StyleSheet } from "react-native";
 import { colors, spacing } from "../constants/theme";
 
 const mockTrades = [
   { id: "1", ticker: "AAPL", date: "2024-07-15", gain: 100000, currency: "USD" },
   { id: "2", ticker: "TSLA", date: "2024-06-05", gain: -50000, currency: "USD" },
-  { id: "3", ticker: "005930", date: "2024-05-01", gain: 200000, currency: "KRW" }
+  { id: "3", ticker: "005930", date: "2024-05-01", gain: 0, currency: "KRW" }
 ];
 
 export default function RealizedGainsScreen() {
-  const [filter, setFilter] = useState("30d");
+  const [filter] = useState("30d");
   const total = mockTrades.reduce((sum, t) => sum + t.gain, 0);
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.filterRow}>
-        <Button title="Last 30d" onPress={() => setFilter("30d")} color={filter === "30d" ? colors.primary : colors.muted} />
-        <Button title="Last 2w" onPress={() => setFilter("2w")} color={filter === "2w" ? colors.primary : colors.muted} />
-        <Button title="Custom" onPress={() => setFilter("custom")} color={filter === "custom" ? colors.primary : colors.muted} />
-      </View>
+      {/* If you want filters, add here */}
       <Text style={styles.total}>
-        Total Realized: {total.toLocaleString()} (all currencies)
+        Total Realized: <Text style={{
+          color:
+            total > 0 ? colors.buy_gain :
+            total < 0 ? colors.sell_loss :
+            colors.par,
+          fontWeight: "bold"
+        }}>{total.toLocaleString()}</Text> (all currencies)
       </Text>
       <FlatList
         data={mockTrades}
@@ -33,9 +35,17 @@ export default function RealizedGainsScreen() {
             <Text
               style={[
                 styles.right,
-                { color: item.gain >= 0 ? colors.success : colors.danger }
+                {
+                  color:
+                    item.gain > 0
+                      ? colors.buy_gain
+                      : item.gain < 0
+                        ? colors.sell_loss
+                        : colors.par
+                }
               ]}
             >
+              {item.gain > 0 ? "+" : ""}
               {item.gain.toLocaleString()} {item.currency}
             </Text>
           </View>
@@ -49,12 +59,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background
-  },
-  filterRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: spacing.md,
-    marginTop: spacing.md
   },
   total: {
     fontWeight: "bold",
@@ -74,7 +78,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border
   },
-  left: { flex: 1 },
-  middle: { flex: 2, textAlign: "center" },
+  left: { flex: 1, color: colors.text },
+  middle: { flex: 2, textAlign: "center", color: colors.text },
   right: { flex: 1, textAlign: "right", fontWeight: "bold" }
 });

@@ -1,37 +1,43 @@
-// components/TradeTypeSelector.js
-
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { colors, spacing } from "../constants/theme";
 
 const tradeTypes = [
-  { label: "Buy", value: "buy", color: colors.danger },    // Red
-  { label: "Sell", value: "sell", color: colors.primary }   // Blue
+  { label: "Buy", value: "buy", color: colors.buy_gain },
+  { label: "Sell", value: "sell", color: colors.sell_loss }
 ];
 
 export default function TradeTypeSelector({ value, onChange }) {
   return (
     <View style={styles.segmentedGroup}>
-      {tradeTypes.map(type => (
-        <TouchableOpacity
-          key={type.value}
-          style={[
-            styles.segmentButton,
-            value === type.value && { backgroundColor: type.color, borderColor: type.color }
-          ]}
-          onPress={() => onChange(type.value)}
-          activeOpacity={0.7}
-        >
-          <Text
+      {tradeTypes.map(type => {
+        const selected = value === type.value;
+        return (
+          <TouchableOpacity
+            key={type.value}
             style={[
-              styles.segmentText,
-              value === type.value && { color: "#fff" }
+              styles.button,
+              selected && {
+                backgroundColor: type.color,
+                borderColor: type.color
+              }
             ]}
+            onPress={() => onChange(type.value)}
+            activeOpacity={0.85}
           >
-            {type.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
+            <Text
+              style={[
+                styles.text,
+                selected
+                  ? { color: "#fff", fontWeight: "600" }
+                  : { color: colors.text, fontWeight: "400" }
+              ]}
+            >
+              {type.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
@@ -39,21 +45,21 @@ export default function TradeTypeSelector({ value, onChange }) {
 const styles = StyleSheet.create({
   segmentedGroup: {
     flexDirection: "row",
-    justifyContent: "space-between",
     marginBottom: spacing.sm
   },
-  segmentButton: {
+  button: {
     flex: 1,
     paddingVertical: spacing.sm,
     marginHorizontal: 2,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: 6,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center"
   },
-  segmentText: {
-    fontWeight: "bold",
-    color: colors.text,
-    textAlign: "center"
+  text: {
+    fontSize: 16,
+    fontWeight: "400"
   }
 });

@@ -1,12 +1,12 @@
 import React from "react";
-import { FlatList, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, FlatList, View, Text, StyleSheet } from "react-native";
 import { colors, spacing } from "../constants/theme";
 
-// Example mock data (replace with your own)
+// Example mock data
 const mockHoldings = [
   { id: "1", ticker: "AAPL", name: "Apple Inc.", value: 5000000, gain: 12.5, currency: "USD" },
-  { id: "2", ticker: "005930", name: "Samsung Electronics", value: 6000000, gain: 8.2, currency: "KRW" },
-  { id: "3", ticker: "TSLA", name: "Tesla", value: 2500000, gain: -5.7, currency: "USD" }
+  { id: "2", ticker: "005930", name: "Samsung Electronics", value: 6000000, gain: -8.2, currency: "KRW" },
+  { id: "3", ticker: "TSLA", name: "Tesla", value: 2500000, gain: 0, currency: "USD" }
 ];
 
 export default function UnrealizedGainsScreen() {
@@ -25,9 +25,17 @@ export default function UnrealizedGainsScreen() {
             <Text
               style={[
                 styles.gain,
-                { color: item.gain >= 0 ? colors.success : colors.danger }
+                {
+                  color:
+                    item.gain > 0
+                      ? colors.buy_gain
+                      : item.gain < 0
+                        ? colors.sell_loss
+                        : colors.par
+                }
               ]}
             >
+              {item.gain > 0 ? "+" : ""}
               {item.gain}%
             </Text>
           </View>
@@ -44,7 +52,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: spacing.md,
-    paddingBottom: 36 // For tab bar
+    paddingBottom: 36
   },
   row: {
     flexDirection: "row",

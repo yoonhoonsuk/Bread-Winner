@@ -1,8 +1,8 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { colors, spacing } from "../constants/theme";
 
-// Replace with real user's holdings from state or backend
+// Replace with actual user holdings or fetch from backend
 const holdings = [
   { ticker: "AAPL", name: "Apple Inc." },
   { ticker: "005930", name: "Samsung Electronics" },
@@ -17,7 +17,6 @@ export default function MyHoldingsScreen({ navigation }) {
           key={item.ticker}
           style={styles.tickerItem}
           onPress={() => {
-            // Send ticker back to the form
             navigation.navigate({
               name: "InputForm",
               params: { ticker: item.ticker },

@@ -1,13 +1,14 @@
 export const colors = {
-    primary: "#007aff",
-    background: "#f8f8f8",
-    tabBar: "#fff",
-    border: "#ddd",
-    danger: "#f55",
-    success: "#28a745",
-    text: "#222",
-    muted: "#888"
-  };
+  primary: "#aaaaaa",        // Pleasant, soft grey for standard buttons (e.g. My Holdings, Search)
+  buy_gain: "#e74c3c",       // Red for BUY & Gain
+  sell_loss: "#3498db",      // Blue for SELL & Loss
+  par: "#28a745",            // Green for par/neutral
+  background: "#f8f8f8",
+  border: "#ddd",
+  text: "#444",              // Pleasant medium-dark grey for normal text
+  muted: "#888"
+};
+
   
   export const spacing = {
     xs: 4,

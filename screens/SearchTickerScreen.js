@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from "react-native";
 import { colors, spacing } from "../constants/theme";
 
-// Simulated DB search for demo purposes
+// Replace with real database or API call in production
 const fakeDatabase = [
   { ticker: "MSFT", name: "Microsoft Corp" },
   { ticker: "GOOGL", name: "Alphabet Inc" },
@@ -13,7 +13,6 @@ export default function SearchTickerScreen({ navigation }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
 
-  // Simulate search by company name (case-insensitive, partial match)
   const handleSearch = (text) => {
     setQuery(text);
     if (text.length === 0) {
