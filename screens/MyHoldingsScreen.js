@@ -24,7 +24,7 @@ export default function MyHoldingsScreen({ navigation }) {
             });
           }}
         >
-          <Text style={styles.tickerText}>{item.ticker} ({item.name})</Text>
+        <Text style={styles.tickerText}>{item.ticker} ({item.name})</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -32,14 +32,14 @@ export default function MyHoldingsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: spacing.md, backgroundColor: colors.background },
-  tickerItem: {
-    padding: spacing.sm,
-    marginBottom: spacing.xs,
-    backgroundColor: "#fff",
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: colors.border
-  },
-  tickerText: { color: colors.text }
+    container: { flex: 1, padding: spacing.md, backgroundColor: colors.background },
+    tickerItem: {
+        padding: spacing.sm,
+        marginBottom: spacing.xs,
+        backgroundColor: "#fff",
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: colors.border
+    },
+    tickerText: { color: colors.text }
 });

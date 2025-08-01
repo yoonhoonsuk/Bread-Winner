@@ -12,7 +12,7 @@ export default function InputStackNavigator() {
       <Stack.Screen
         name="InputForm"
         component={InputScreen}
-        options={{ headerShown: false }}
+        options={{ title: null}}
       />
       <Stack.Screen
         name="MyHoldings"
