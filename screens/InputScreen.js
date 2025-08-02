@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, ScrollView, View, Text, TextInput, StyleSheet, Button } from "react-native";
+import { SafeAreaView, ScrollView, View, Text, TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import TickerSourceSelector from "../components/TickerSourceSelector";
 import TradeTypeSelector from "../components/TradeTypeSelector";
 import CurrencySelector from "../components/CurrencySelector";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { colors, spacing } from "../constants/theme";
+import { ROW_HEIGHT, BORDER_RADIUS, BORDER_WIDTH } from "../constants/dimensions";
 
-// Helper functions for today/yesterday
+// Helper functions
 const getToday = () => {
   const d = new Date();
-  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+  return d.toISOString().slice(0, 10);
 };
-
 const getYesterday = () => {
   const d = new Date();
   d.setDate(d.getDate() - 1);
@@ -25,16 +25,26 @@ export default function InputScreen({ navigation, route }) {
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("KRW");
+
+  // Date controls
   const [date, setDate] = useState(getToday());
+  const [dateMode, setDateMode] = useState("today");
   const [showPicker, setShowPicker] = useState(false);
-  const [dateMode, setDateMode] = useState("today"); // "today" | "yesterday" | "custom"
+  const [customDate, setCustomDate] = useState("");
 
   useEffect(() => {
     if (route?.params?.ticker && route.params.ticker !== ticker) {
       setTicker(route.params.ticker);
-      setTickerSource(null); // Hide selector when ticker chosen
+      setTickerSource(null);
     }
   }, [route?.params?.ticker]);
+
+  useEffect(() => {
+    if (customDate) {
+      setDate(customDate);
+      setDateMode("custom");
+    }
+  }, [customDate]);
 
   const handleSubmit = () => {
     alert(
@@ -42,30 +52,89 @@ export default function InputScreen({ navigation, route }) {
     );
   };
 
-  const handleTickerSource = (src) => {
-    setTickerSource(src);
-    if (src === "holdings") {
-      navigation.navigate("MyHoldings", { currentTicker: ticker });
-    } else if (src === "search") {
-      navigation.navigate("SearchTicker", { currentTicker: ticker });
+  function renderDateSelector() {
+    if (dateMode === "custom" && customDate) {
+      // Custom date pill
+      return (
+        <View style={styles.selectorPillRow}>
+          <Text style={styles.selectorPillText}>{customDate}</Text>
+          <Text style={styles.clearButton} onPress={() => {
+            setCustomDate("");
+            setDateMode(null);
+            setDate(getToday());
+          }}>✕</Text>
+        </View>
+      );
     }
-  };
+    // Otherwise, normal horizontal segmented control
+    return (
+      <View style={styles.segmentedRow}>
+        {["today", "yesterday", "custom"].map((mode, idx) => (
+          <TouchableOpacity
+            key={mode}
+            style={[
+              styles.segmentedButton,
+              dateMode === mode && styles.segmentedButtonActive,
+              idx === 0 && styles.segmentedButtonLeft,
+              idx === 2 && styles.segmentedButtonRight,
+            ]}
+            onPress={() => {
+              if (mode === "today") {
+                setDate(getToday());
+                setDateMode("today");
+                setCustomDate("");
+              } else if (mode === "yesterday") {
+                setDate(getYesterday());
+                setDateMode("yesterday");
+                setCustomDate("");
+              } else if (mode === "custom") {
+                setShowPicker(true);
+              }
+            }}
+            activeOpacity={0.85}
+          >
+            <Text style={[
+              styles.segmentedButtonText,
+              dateMode === mode && styles.segmentedButtonTextActive,
+            ]}>
+              {mode === "today" ? "Today" : mode === "yesterday" ? "Yesterday" : "Custom"}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  }
+
+  function renderTickerSelector() {
+    if (ticker) {
+      return (
+        <View style={styles.selectorPillRow}>
+          <Text style={styles.selectorPillText}>{ticker}</Text>
+          <Text style={styles.clearButton} onPress={() => {
+            setTicker("");
+            setTickerSource(null);
+          }}>✕</Text>
+        </View>
+      );
+    }
+    // Use TickerSourceSelector, which should also use this segmentedRow style and constants
+    return (
+      <TickerSourceSelector value={tickerSource} onChange={(src) => {
+        setTickerSource(src);
+        if (src === "holdings") {
+          navigation.navigate("MyHoldings", { currentTicker: ticker });
+        } else if (src === "search") {
+          navigation.navigate("SearchTicker", { currentTicker: ticker });
+        }
+      }} />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <Text style={styles.label}>Ticker</Text>
-        {ticker ? (
-          <View style={styles.tickerSelectedRow}>
-            <Text style={styles.tickerSelectedText}>{ticker}</Text>
-            <Text style={styles.clearButton} onPress={() => {
-              setTicker("");
-              setTickerSource(null);
-            }}>✕</Text>
-          </View>
-        ) : (
-          <TickerSourceSelector value={tickerSource} onChange={handleTickerSource} />
-        )}
+        {renderTickerSelector()}
 
         <Text style={styles.label}>Trade Type</Text>
         <TradeTypeSelector value={tradeType} onChange={setTradeType} />
@@ -92,63 +161,22 @@ export default function InputScreen({ navigation, route }) {
         <CurrencySelector value={currency} onChange={setCurrency} />
 
         <Text style={styles.label}>Date</Text>
-        <View style={styles.dateRow}>
-          <Text
-            style={[
-              styles.dateButton,
-              dateMode === "today" && styles.dateButtonActive
-            ]}
-            onPress={() => {
-              setDate(getToday());
-              setDateMode("today");
-            }}
-          >
-            Today
-          </Text>
-          <Text
-            style={[
-              styles.dateButton,
-              dateMode === "yesterday" && styles.dateButtonActive
-            ]}
-            onPress={() => {
-              setDate(getYesterday());
-              setDateMode("yesterday");
-            }}
-          >
-            Yesterday
-          </Text>
-        </View>
-        <View style={{ marginBottom: spacing.sm }}>
-          <Text
-            style={[
-              styles.dateButton,
-              dateMode === "custom" && styles.dateButtonActive
-            ]}
-            onPress={() => {
-              setShowPicker(true);
-              setDateMode("custom");
-            }}
-          >
-            Custom
-          </Text>
-        </View>
-        <Text style={styles.selectedDate}>Selected: {date}</Text>
+        {renderDateSelector()}
 
         {/* Add Trade Button */}
-        <View style={{ marginTop: spacing.md }}>
-          <Button title="Add Trade" onPress={handleSubmit} color={colors.primary} />
-        </View>
+        <TouchableOpacity style={styles.fullWidthButton} onPress={handleSubmit} activeOpacity={0.85}>
+          <Text style={styles.fullWidthButtonText}>Add Trade</Text>
+        </TouchableOpacity>
 
         {/* Date Picker Modal */}
         <DateTimePickerModal
           isVisible={showPicker}
           mode="date"
-          date={new Date(date)}
+          date={customDate ? new Date(customDate) : new Date()}
           onConfirm={pickedDate => {
             const d = new Date(pickedDate);
-            setDate(d.toISOString().slice(0, 10));
+            setCustomDate(d.toISOString().slice(0, 10));
             setShowPicker(false);
-            setDateMode("custom");
           }}
           onCancel={() => setShowPicker(false)}
           maximumDate={new Date()}
@@ -174,25 +202,62 @@ const styles = StyleSheet.create({
     color: colors.text
   },
   input: {
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: colors.border,
-    borderRadius: 6,
+    borderRadius: BORDER_RADIUS,
     padding: spacing.sm,
     marginBottom: spacing.sm,
     backgroundColor: "#fff"
   },
-  tickerSelectedRow: {
+  segmentedRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
+    height: ROW_HEIGHT,
+    borderRadius: BORDER_RADIUS,
+    borderWidth: BORDER_WIDTH,
+    borderColor: colors.primary,
+    marginBottom: spacing.sm,
+    backgroundColor: "#fff",
+    overflow: "hidden",
+  },
+  segmentedButton: {
+    flex: 1,
+    height: ROW_HEIGHT,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+  },
+  segmentedButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  segmentedButtonLeft: {
+    borderTopLeftRadius: BORDER_RADIUS,
+    borderBottomLeftRadius: BORDER_RADIUS,
+  },
+  segmentedButtonRight: {
+    borderTopRightRadius: BORDER_RADIUS,
+    borderBottomRightRadius: BORDER_RADIUS,
+  },
+  segmentedButtonText: {
+    color: colors.text,
+    fontWeight: "500",
+    fontSize: 16,
+  },
+  segmentedButtonTextActive: {
+    color: "#fff",
+  },
+  // "Pill" row for selected ticker or custom date
+  selectorPillRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: ROW_HEIGHT,
+    borderRadius: BORDER_RADIUS,
     marginBottom: spacing.sm,
     backgroundColor: colors.primary,
-    borderRadius: 6,
-    minHeight: 44,
     paddingHorizontal: spacing.md,
+    width: "100%"
   },
-  tickerSelectedText: {
+  selectorPillText: {
     color: "#fff",
     fontWeight: "600",
     fontSize: 16,
@@ -208,28 +273,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     textAlign: "right"
   },
-  dateRow: {
-    flexDirection: "row",
-    marginBottom: spacing.xs,
-  },
-  dateButton: {
-    flex: 1,
-    backgroundColor: "#eee",
-    color: colors.text,
-    paddingVertical: 10,
-    textAlign: "center",
-    borderRadius: 6,
-    marginRight: spacing.xs,
-    fontWeight: "500"
-  },
-  dateButtonActive: {
+  fullWidthButton: {
     backgroundColor: colors.primary,
-    color: "#fff"
+    borderRadius: BORDER_RADIUS,
+    height: ROW_HEIGHT,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: spacing.md,
+    width: "100%",
+    borderWidth: BORDER_WIDTH,
+    borderColor: colors.primary,
+    marginBottom: spacing.md
   },
-  selectedDate: {
-    marginBottom: spacing.sm,
-    textAlign: "center",
-    color: colors.text,
-    fontWeight: "600"
+  fullWidthButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 18,
+    letterSpacing: 0.5
   }
 });
