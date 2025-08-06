@@ -4,21 +4,21 @@ export const colors = {
   sell_loss: "#3498db",      // Blue for SELL & Loss
   par: "#28a745",            // Green for par/neutral
   background: "#f8f8f8",
-  border: "#ddd",
   text: "#444",              // Pleasant medium-dark grey for normal text
-  muted: "#888"
+  border: "#ddd",     // Warm brown/goldenrod for bakery tray feel
+  tabBar: "#fff",
+  muted: "#888",
 };
 
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24
+};
+
+export const fonts = {
+  regular: "System",
+  bold: "System"
+};
   
-  export const spacing = {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24
-  };
-  
-  export const fonts = {
-    regular: "System",
-    bold: "System"
-  };
-    

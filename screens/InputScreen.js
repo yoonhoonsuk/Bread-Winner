@@ -1,24 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, ScrollView, View, Text, TextInput, StyleSheet, TouchableOpacity } from "react-native";
-import TickerSourceSelector from "../components/TickerSourceSelector";
-import TradeTypeSelector from "../components/TradeTypeSelector";
-import CurrencySelector from "../components/CurrencySelector";
+import { SafeAreaView, ScrollView, View, Text, TextInput, TouchableOpacity } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { colors, spacing } from "../constants/theme";
-import { ROW_HEIGHT, BORDER_RADIUS, BORDER_WIDTH } from "../constants/dimensions";
+import { HEADER_TOP_MARGIN, TAB_BAR_FLOAT_MARGIN } from "../constants/dimensions";
+import styles from "../styles/InputScreen.styles";
 
-// Helper functions
-const getToday = () => {
-  const d = new Date();
-  return d.toISOString().slice(0, 10);
-};
+const getToday = () => new Date().toISOString().slice(0, 10);
 const getYesterday = () => {
   const d = new Date();
   d.setDate(d.getDate() - 1);
   return d.toISOString().slice(0, 10);
 };
 
+const adjust = (value, delta, setter) => {
+  const num = parseFloat(value) || 0;
+  const next = Math.max(0, num + delta);
+  setter(next.toString());
+};
+
 export default function InputScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
+
   const [ticker, setTicker] = useState(route?.params?.ticker || "");
   const [tickerSource, setTickerSource] = useState(null);
   const [tradeType, setTradeType] = useState("buy");
@@ -26,7 +29,6 @@ export default function InputScreen({ navigation, route }) {
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("KRW");
 
-  // Date controls
   const [date, setDate] = useState(getToday());
   const [dateMode, setDateMode] = useState("today");
   const [showPicker, setShowPicker] = useState(false);
@@ -47,37 +49,108 @@ export default function InputScreen({ navigation, route }) {
   }, [customDate]);
 
   const handleSubmit = () => {
-    alert(
-      `Trade: ${tradeType} ${quantity} ${ticker} at ${price} ${currency} on ${date}`
-    );
+    alert(`Trade: ${tradeType} ${quantity} ${ticker} at ${price} ${currency} on ${date}`);
   };
 
-  function renderDateSelector() {
-    if (dateMode === "custom" && customDate) {
-      // Custom date pill
+  const renderTickerSelector = () => {
+    if (ticker) {
       return (
         <View style={styles.selectorPillRow}>
-          <Text style={styles.selectorPillText}>{customDate}</Text>
-          <Text style={styles.clearButton} onPress={() => {
-            setCustomDate("");
-            setDateMode(null);
-            setDate(getToday());
-          }}>✕</Text>
+          <Text style={styles.selectorPillText}>{ticker}</Text>
+          <Text
+            style={styles.clearButton}
+            onPress={() => {
+              setTicker("");
+              setTickerSource(null);
+            }}
+          >
+            ✕
+          </Text>
         </View>
       );
     }
-    // Otherwise, normal horizontal segmented control
     return (
-      <View style={styles.segmentedRow}>
-        {["today", "yesterday", "custom"].map((mode, idx) => (
+      <View style={styles.buttonRow}>
+        {[
+          { key: "holdings", label: "My Holdings" },
+          { key: "search", label: "Search" }
+        ].map((btn) => (
+          <TouchableOpacity
+            key={btn.key}
+            style={[
+              styles.sharedButton,
+              tickerSource === btn.key && styles.sharedButtonActive,
+            ]}
+            onPress={() => {
+              setTickerSource(btn.key);
+              if (btn.key === "holdings") {
+                navigation.navigate("MyHoldings", { currentTicker: ticker });
+              } else if (btn.key === "search") {
+                navigation.navigate("SearchTicker", { currentTicker: ticker });
+              }
+            }}
+            activeOpacity={0.85}
+          >
+            <Text
+              style={[
+                styles.sharedButtonText,
+                tickerSource === btn.key && styles.sharedButtonTextActive,
+              ]}
+            >
+              {btn.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  const renderCurrencySelector = () => (
+    <View style={styles.buttonRow}>
+      {["KRW", "USD", "EUR"].map((cur) => (
+        <TouchableOpacity
+          key={cur}
+          style={[styles.sharedButton, currency === cur && styles.sharedButtonActive]}
+          onPress={() => setCurrency(cur)}
+          activeOpacity={0.85}
+        >
+          <Text
+            style={[
+              styles.sharedButtonText,
+              currency === cur && styles.sharedButtonTextActive,
+            ]}
+          >
+            {cur}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  const renderDateSelector = () => {
+    if (dateMode === "custom" && customDate) {
+      return (
+        <View style={styles.selectorPillRow}>
+          <Text style={styles.selectorPillText}>{customDate}</Text>
+          <Text
+            style={styles.clearButton}
+            onPress={() => {
+              setCustomDate("");
+              setDateMode("today");
+              setDate(getToday());
+            }}
+          >
+            ✕
+          </Text>
+        </View>
+      );
+    }
+    return (
+      <View style={styles.buttonRow}>
+        {["today", "yesterday", "custom"].map((mode) => (
           <TouchableOpacity
             key={mode}
-            style={[
-              styles.segmentedButton,
-              dateMode === mode && styles.segmentedButtonActive,
-              idx === 0 && styles.segmentedButtonLeft,
-              idx === 2 && styles.segmentedButtonRight,
-            ]}
+            style={[styles.sharedButton, dateMode === mode && styles.sharedButtonActive]}
             onPress={() => {
               if (mode === "today") {
                 setDate(getToday());
@@ -87,93 +160,152 @@ export default function InputScreen({ navigation, route }) {
                 setDate(getYesterday());
                 setDateMode("yesterday");
                 setCustomDate("");
-              } else if (mode === "custom") {
+              } else {
                 setShowPicker(true);
               }
             }}
             activeOpacity={0.85}
           >
-            <Text style={[
-              styles.segmentedButtonText,
-              dateMode === mode && styles.segmentedButtonTextActive,
-            ]}>
-              {mode === "today" ? "Today" : mode === "yesterday" ? "Yesterday" : "Custom"}
+            <Text
+              style={[
+                styles.sharedButtonText,
+                dateMode === mode && styles.sharedButtonTextActive,
+              ]}
+            >
+              {mode === "today"
+                ? "Today"
+                : mode === "yesterday"
+                ? "Yesterday"
+                : "Custom"}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
     );
-  }
+  };
 
-  function renderTickerSelector() {
-    if (ticker) {
-      return (
-        <View style={styles.selectorPillRow}>
-          <Text style={styles.selectorPillText}>{ticker}</Text>
-          <Text style={styles.clearButton} onPress={() => {
-            setTicker("");
-            setTickerSource(null);
-          }}>✕</Text>
-        </View>
-      );
-    }
-    // Use TickerSourceSelector, which should also use this segmentedRow style and constants
-    return (
-      <TickerSourceSelector value={tickerSource} onChange={(src) => {
-        setTickerSource(src);
-        if (src === "holdings") {
-          navigation.navigate("MyHoldings", { currentTicker: ticker });
-        } else if (src === "search") {
-          navigation.navigate("SearchTicker", { currentTicker: ticker });
-        }
-      }} />
-    );
-  }
+  const renderTradeTypeSelector = () => (
+    <View style={styles.buttonRow}>
+      {[
+        { key: "buy", label: "Buy", color: colors.buy_gain },
+        { key: "sell", label: "Sell", color: colors.sell_loss }
+      ].map(({ key, label, color }) => {
+        const isActive = tradeType === key;
+        return (
+          <TouchableOpacity
+            key={key}
+            style={{
+              flex: 1,
+              borderWidth: 1,
+              borderColor: color,
+              borderRadius: 6,
+              backgroundColor: isActive ? color : "#fff",
+              height: 40,
+              justifyContent: "center",
+              alignItems: "center",
+              marginHorizontal: 4,
+            }}
+            onPress={() => setTradeType(key)}
+            activeOpacity={0.85}
+          >
+            <Text
+              style={{
+                fontWeight: "600",
+                fontSize: 14,
+                color: isActive ? "#fff" : color,
+              }}
+            >
+              {label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: HEADER_TOP_MARGIN,
+            paddingBottom: insets.bottom + TAB_BAR_FLOAT_MARGIN
+          }
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.label}>Ticker</Text>
         {renderTickerSelector()}
 
         <Text style={styles.label}>Trade Type</Text>
-        <TradeTypeSelector value={tradeType} onChange={setTradeType} />
+        {renderTradeTypeSelector()}
 
         <Text style={styles.label}>Quantity</Text>
-        <TextInput
-          style={styles.input}
-          value={quantity}
-          onChangeText={setQuantity}
-          keyboardType="numeric"
-          placeholder="e.g. 10"
-        />
+        <View style={styles.steppedInputRow}>
+          <TextInput
+            style={styles.steppedInput}
+            value={quantity}
+            onChangeText={setQuantity}
+            keyboardType="numeric"
+            placeholder="0"
+          />
+          <TouchableOpacity
+            style={styles.stepperBtn}
+            onPress={() => adjust(quantity, -1, setQuantity)}
+          >
+            <Text style={styles.stepperText}>–</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.stepperBtn}
+            onPress={() => adjust(quantity, +1, setQuantity)}
+          >
+            <Text style={styles.stepperText}>+</Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.label}>Price</Text>
-        <TextInput
-          style={styles.input}
-          value={price}
-          onChangeText={setPrice}
-          keyboardType="numeric"
-          placeholder="e.g. 50000"
-        />
+        <View style={styles.steppedInputRow}>
+          <TextInput
+            style={styles.steppedInput}
+            value={price}
+            onChangeText={setPrice}
+            keyboardType="numeric"
+            placeholder="0"
+          />
+          <TouchableOpacity
+            style={styles.stepperBtn}
+            onPress={() => adjust(price, -1, setPrice)}
+          >
+            <Text style={styles.stepperText}>–</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.stepperBtn}
+            onPress={() => adjust(price, +1, setPrice)}
+          >
+            <Text style={styles.stepperText}>+</Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.label}>Currency</Text>
-        <CurrencySelector value={currency} onChange={setCurrency} />
+        {renderCurrencySelector()}
 
         <Text style={styles.label}>Date</Text>
         {renderDateSelector()}
 
-        {/* Add Trade Button */}
-        <TouchableOpacity style={styles.fullWidthButton} onPress={handleSubmit} activeOpacity={0.85}>
-          <Text style={styles.fullWidthButtonText}>Add Trade</Text>
+        <TouchableOpacity
+          style={[styles.sharedButton, styles.sharedButtonActive, { marginTop: spacing.md }]}
+          onPress={handleSubmit}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.sharedButtonTextActive}>Add Trade</Text>
         </TouchableOpacity>
 
-        {/* Date Picker Modal */}
         <DateTimePickerModal
           isVisible={showPicker}
           mode="date"
           date={customDate ? new Date(customDate) : new Date()}
-          onConfirm={pickedDate => {
+          onConfirm={(pickedDate) => {
             const d = new Date(pickedDate);
             setCustomDate(d.toISOString().slice(0, 10));
             setShowPicker(false);
@@ -185,110 +317,3 @@ export default function InputScreen({ navigation, route }) {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background
-  },
-  scrollContent: {
-    padding: spacing.md,
-    paddingBottom: 80
-  },
-  label: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
-    fontWeight: "bold",
-    color: colors.text
-  },
-  input: {
-    borderWidth: BORDER_WIDTH,
-    borderColor: colors.border,
-    borderRadius: BORDER_RADIUS,
-    padding: spacing.sm,
-    marginBottom: spacing.sm,
-    backgroundColor: "#fff"
-  },
-  segmentedRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    height: ROW_HEIGHT,
-    borderRadius: BORDER_RADIUS,
-    borderWidth: BORDER_WIDTH,
-    borderColor: colors.primary,
-    marginBottom: spacing.sm,
-    backgroundColor: "#fff",
-    overflow: "hidden",
-  },
-  segmentedButton: {
-    flex: 1,
-    height: ROW_HEIGHT,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#fff",
-  },
-  segmentedButtonActive: {
-    backgroundColor: colors.primary,
-  },
-  segmentedButtonLeft: {
-    borderTopLeftRadius: BORDER_RADIUS,
-    borderBottomLeftRadius: BORDER_RADIUS,
-  },
-  segmentedButtonRight: {
-    borderTopRightRadius: BORDER_RADIUS,
-    borderBottomRightRadius: BORDER_RADIUS,
-  },
-  segmentedButtonText: {
-    color: colors.text,
-    fontWeight: "500",
-    fontSize: 16,
-  },
-  segmentedButtonTextActive: {
-    color: "#fff",
-  },
-  // "Pill" row for selected ticker or custom date
-  selectorPillRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    height: ROW_HEIGHT,
-    borderRadius: BORDER_RADIUS,
-    marginBottom: spacing.sm,
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.md,
-    width: "100%"
-  },
-  selectorPillText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
-    textAlign: "center",
-    flex: 1,
-  },
-  clearButton: {
-    marginLeft: spacing.sm,
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    textAlign: "right"
-  },
-  fullWidthButton: {
-    backgroundColor: colors.primary,
-    borderRadius: BORDER_RADIUS,
-    height: ROW_HEIGHT,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: spacing.md,
-    width: "100%",
-    borderWidth: BORDER_WIDTH,
-    borderColor: colors.primary,
-    marginBottom: spacing.md
-  },
-  fullWidthButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 18,
-    letterSpacing: 0.5
-  }
-});

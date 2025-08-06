@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from "react-native";
-import { colors, spacing } from "../constants/theme";
+import { View, Text, TextInput, TouchableOpacity, FlatList } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { HEADER_TOP_MARGIN, TAB_BAR_FLOAT_MARGIN } from "../constants/dimensions";
+import styles from "../styles/SearchTickerScreen.styles";
 
 // Replace with real database or API call in production
 const fakeDatabase = [
@@ -12,6 +14,7 @@ const fakeDatabase = [
 export default function SearchTickerScreen({ navigation }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
+  const insets = useSafeAreaInsets();
 
   const handleSearch = (text) => {
     setQuery(text);
@@ -27,7 +30,15 @@ export default function SearchTickerScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: HEADER_TOP_MARGIN,
+          paddingBottom: insets.bottom + TAB_BAR_FLOAT_MARGIN
+        }
+      ]}
+    >
       <TextInput
         style={styles.input}
         value={query}
@@ -60,29 +71,3 @@ export default function SearchTickerScreen({ navigation }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: spacing.md, backgroundColor: colors.background },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 6,
-    padding: spacing.sm,
-    marginBottom: spacing.sm,
-    backgroundColor: "#fff"
-  },
-  tickerItem: {
-    padding: spacing.sm,
-    marginBottom: spacing.xs,
-    backgroundColor: "#fff",
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: colors.border
-  },
-  tickerText: { color: colors.text },
-  noResults: {
-    color: colors.muted,
-    textAlign: "center",
-    padding: spacing.sm
-  }
-});
